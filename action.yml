@@ -1,0 +1,6 @@
+name: "My Github Action TEST"
+description: "Test"
+
+runs:
+  using: 'node16'
+  main: 'index.js'
