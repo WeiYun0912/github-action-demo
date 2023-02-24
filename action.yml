@@ -1,6 +1,12 @@
 name: "My Github Action TEST"
 description: "Test"
 
+inputs:
+  MAX_LINES:
+    description: "MAX_LINES"
+    default: "5"
+    required: false
+
 runs:
   using: 'node16'
   main: 'dist/index.js'
