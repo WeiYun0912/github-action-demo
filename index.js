@@ -1,10 +1,9 @@
 const core = require("@actions/core");
 const { Toolkit } = require("actions-toolkit");
+const fs = require("fs");
 const cheerio = require("cheerio");
 const axios = require("axios");
-const fs = require("fs");
 const { spawn } = require("child_process");
-// https://weiyun0912.github.io/Wei-Docusaurus/docs/intro
 
 // yml input
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
@@ -61,15 +60,17 @@ const commitReadmeFile = async () => {
   await exec("git", ["push"]);
 };
 
+// 爬自己的技術文章目錄
 async function getBlogOutline() {
   const { data } = await axios.get(
     "https://weiyun0912.github.io/Wei-Docusaurus/docs/intro"
   );
+
   const $ = cheerio.load(data);
 
-  const Logs = $("h1:contains('Logs')").next().children();
-
   const outline = [];
+
+  const Logs = $("h1:contains('Logs')").next().children();
 
   Logs.each((_, el) => {
     const logDetail = {
@@ -88,32 +89,34 @@ async function getBlogOutline() {
     outline.push(logDetail);
   });
 
-  const outlineFilter = outline.slice(0, MAX_LINES); //MAX_LINES
+  const outlineFilter = outline.slice(0, MAX_LINES);
 
   return outlineFilter;
 }
 
 Toolkit.run(async (tools) => {
-  tools.log.success("Success");
-
-  const outline = await getBlogOutline();
+  tools.log.debug("Edit README.md Start...");
 
   const readmeContent = fs.readFileSync("./README.md", "utf-8").split("\n");
 
-  console.log(readmeContent);
-
+  //找到 START TAG
   let startIndex = readmeContent.findIndex(
     (content) => content.trim() === "<!-- UPDATE_WEISITE:START -->"
   );
 
-  if (startIndex === -1) return tools.exit.failure("Not Found Tag");
+  // START TAG 不存在
+  if (startIndex === -1)
+    return tools.exit.failure("Not Found Start Update Comments");
 
   let endIndex = readmeContent.findIndex(
     (content) => content.trim() === "<!-- UPDATE_WEISITE:END -->"
   );
 
+  const outline = await getBlogOutline();
+
+  //只有 <!-- UPDATE_WEISITE:START --> 沒有 <!-- UPDATE_WEISITE:END -->
   if (startIndex !== -1 && endIndex === -1) {
-    startIndex++;
+    startIndex++; //next line
 
     outline.forEach((o, index) => {
       readmeContent.splice(
@@ -132,13 +135,52 @@ Toolkit.run(async (tools) => {
     fs.writeFileSync("./README.md", readmeContent.join("\n"));
 
     try {
-      await commitReadmeFile();
+      // await commitReadmeFile();
+      tools.log.success("Commit file success");
     } catch (error) {
+      tools.log.debug("Something went wrong");
       return tools.exit.failure(error);
     }
-
-    tools.exit.success("Success");
+    tools.exit.success("Wrote to README");
   }
 
-  //比較
+  const oldContent = readmeContent.slice(startIndex + 1, endIndex).join("\n");
+  const newContent = outline
+    .map((o) => `- ${o.title} [連結](${o.link})`)
+    .join("\n");
+
+  const compareOldContent = oldContent.replace(/(?:\\[rn]|[\r\n]+)+/g, "");
+
+  const compareNewContentt = newContent.replace(/(?:\\[rn]|[\r\n]+)+/g, "");
+
+  if (compareOldContent === compareNewContentt)
+    tools.exit.success("Same result");
+
+  startIndex++;
+
+  // 把 <!-- UPDATE_WEISITE:START --> 到 <!-- UPDATE_WEISITE:END --> 間的內容刪掉
+  // 取得 START ~ END 的間隙
+  let gap = endIndex - startIndex;
+  readmeContent.splice(startIndex, gap);
+
+  //重新把內容加進去
+  outline.forEach((o, index) => {
+    readmeContent.splice(
+      startIndex + index,
+      0,
+      `- ${o.title} [連結](${o.link})`
+    );
+  });
+  tools.log.success("Updated README with the recent blog outline");
+
+  fs.writeFileSync("./README.md", readmeContent.join("\n"));
+
+  try {
+    await commitReadmeFile();
+    tools.log.success("Commit file success");
+  } catch (err) {
+    tools.log.debug("Something went wrong");
+    return tools.exit.failure(err);
+  }
+  tools.exit.success("Success");
 });
