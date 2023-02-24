@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Updates Blog Outline
-        uses: WeiYun0912/github-action-demo@v1
+        uses: WeiYun0912/github-action-demo@
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMITTER_USERNAME: "WeiYun0912"
