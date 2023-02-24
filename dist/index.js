@@ -45901,7 +45901,7 @@ const { Toolkit } = __nccwpck_require__(7045);
 const cheerio = __nccwpck_require__(4612);
 const axios = __nccwpck_require__(8757);
 const fs = __nccwpck_require__(7147);
-
+const { spawn } = __nccwpck_require__(2081);
 // https://weiyun0912.github.io/Wei-Docusaurus/docs/intro
 
 // yml input
@@ -46032,9 +46032,8 @@ Toolkit.run(async (tools) => {
 
   try {
     await commitReadmeFile();
-  } catch (err) {
-    tools.log.debug("Something went wrong");
-    return tools.exit.failure(err);
+  } catch (error) {
+    return tools.exit.failure(error);
   }
 
   tools.exit.success("Test Success");

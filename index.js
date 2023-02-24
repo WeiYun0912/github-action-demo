@@ -3,7 +3,7 @@ const { Toolkit } = require("actions-toolkit");
 const cheerio = require("cheerio");
 const axios = require("axios");
 const fs = require("fs");
-
+const { spawn } = require("child_process");
 // https://weiyun0912.github.io/Wei-Docusaurus/docs/intro
 
 // yml input
@@ -134,9 +134,8 @@ Toolkit.run(async (tools) => {
 
   try {
     await commitReadmeFile();
-  } catch (err) {
-    tools.log.debug("Something went wrong");
-    return tools.exit.failure(err);
+  } catch (error) {
+    return tools.exit.failure(error);
   }
 
   tools.exit.success("Test Success");
