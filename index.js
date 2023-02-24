@@ -128,15 +128,15 @@ Toolkit.run(async (tools) => {
       0,
       "<!-- UPDATE_WEISITE:END -->"
     );
+
+    fs.writeFileSync("./README.md", readmeContent.join("\n"));
+
+    try {
+      await commitReadmeFile();
+    } catch (error) {
+      return tools.exit.failure(error);
+    }
+
+    tools.exit.success("Success");
   }
-
-  fs.writeFileSync("./README.md", readmeContent.join("\n"));
-
-  try {
-    await commitReadmeFile();
-  } catch (error) {
-    return tools.exit.failure(error);
-  }
-
-  tools.exit.success("Test Success");
 });
