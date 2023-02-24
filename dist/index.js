@@ -46033,7 +46033,8 @@ Toolkit.run(async (tools) => {
   try {
     await commitReadmeFile();
   } catch (error) {
-    tools.exit.failure("Error");
+    tools.log.debug("Something went wrong");
+    return tools.exit.failure(err);
   }
 
   tools.exit.success("Test Success");
