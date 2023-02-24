@@ -139,4 +139,6 @@ Toolkit.run(async (tools) => {
 
     tools.exit.success("Success");
   }
+
+  //比較
 });
